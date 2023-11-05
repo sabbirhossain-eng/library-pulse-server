@@ -26,6 +26,25 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const bookCollection = client.db("libraryPulse").collection("book");
+
+    app.get('/book', (req, res) =>{
+        const cursor = bookCollection.find();
+        const result = cursor.toArray();
+        res.send(result);
+    });
+
+    app.post('/book', async(req, res) =>{
+        const newBooks = req.body;
+        console.log(newBooks);
+        const result = await bookCollection.insertOne(newBooks);
+        res.send(result)
+    })
+
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
