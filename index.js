@@ -28,6 +28,9 @@ async function run() {
     await client.connect();
 
     const bookCollection = client.db("libraryPulse").collection("book");
+    const borrowCollection = client.db("libraryPulse").collection("borrow");
+
+
 
     app.get('/book', async(req, res) =>{
         const cursor = bookCollection.find();
@@ -50,6 +53,12 @@ async function run() {
     })
 
 
+    // Borrow api
+    app.get('/borrow', async(req, res) =>{
+      const cursor = borrowCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+  });
 
 
     // Send a ping to confirm a successful connection
