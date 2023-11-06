@@ -3,7 +3,7 @@ const cors = require("cors");
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 
 // middleware
@@ -29,11 +29,18 @@ async function run() {
 
     const bookCollection = client.db("libraryPulse").collection("book");
 
-    app.get('/book', (req, res) =>{
+    app.get('/book', async(req, res) =>{
         const cursor = bookCollection.find();
-        const result = cursor.toArray();
+        const result = await cursor.toArray();
         res.send(result);
     });
+
+    app.get('/book/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await bookCollection.findOne(query);
+      res.send(result);
+    })
 
     app.post('/book', async(req, res) =>{
         const newBooks = req.body;
