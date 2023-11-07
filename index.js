@@ -60,10 +60,17 @@ async function run() {
   });
 
   app.post('/borrow', async(req, res) =>{
-    const newBorrow = req.body;
-    const result = await borrowCollection.insertOne(newBorrow);
+    const {newBorrow, book} = req.body;
+    const result = await borrowCollection.insertOne({newBorrow, book});
     res.send(result);
-})
+});
+
+app.delete('/borrow/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) }
+  const result = await borrowCollection.deleteOne(query);
+  res.send(result);
+});
 
 
     // Send a ping to confirm a successful connection
