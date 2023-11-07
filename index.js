@@ -47,10 +47,9 @@ async function run() {
 
     app.post('/book', async(req, res) =>{
         const newBooks = req.body;
-        console.log(newBooks);
         const result = await bookCollection.insertOne(newBooks);
-        res.send(result)
-    })
+        res.send(result);
+    });
 
 
     // Borrow api
@@ -59,6 +58,12 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
   });
+
+  app.post('/borrow', async(req, res) =>{
+    const newBorrow = req.body;
+    const result = await borrowCollection.insertOne(newBorrow);
+    res.send(result);
+})
 
 
     // Send a ping to confirm a successful connection
