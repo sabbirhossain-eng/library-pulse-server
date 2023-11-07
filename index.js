@@ -65,6 +65,31 @@ async function run() {
     res.send(result);
 });
 
+app.patch('/book/:id', async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const { quantity: updatedQuantity } = req.body;
+  
+  const update = {
+    $set: { quantity: updatedQuantity }
+  };
+
+  try {
+    const result = await bookCollection.updateOne(filter, update);
+
+    if (result.modifiedCount === 1) {
+      res.json({ quantity: updatedQuantity });
+    } else {
+      res.status(404).json({ message: 'Book not found' });
+    }
+  } catch (error) {
+    console.error('Error updating quantity:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
 app.delete('/borrow/:id', async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) }
