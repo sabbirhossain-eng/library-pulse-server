@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -7,7 +9,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // middleware
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173'],
+  credentials: true
+}));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bfscg0l.mongodb.net/?retryWrites=true&w=majority`;
@@ -21,6 +26,34 @@ const client = new MongoClient(uri, {
   },
 });
 
+// token middleware
+
+const logger = async(req, res, next) =>{
+  console.log('log info :', req.host, req.originalUrl);
+  next();
+}
+
+const verifyToken = async (req, res, next) =>{
+  const token = req?.cookies?.token;
+  // console.log('value of token in middleware :', token);
+
+  if(!token){
+    return res.status(401).send({message: 'not authorized'})
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+    // error
+    if(err){
+      console.log(err)
+      return res.status(401).send({message: 'unauthorized'})
+    }
+    // if token is valid it would be decoded
+    console.log('value in the token', decoded);
+    req.user = decoded;
+    next()
+  })
+
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -28,6 +61,28 @@ async function run() {
 
     const bookCollection = client.db("libraryPulse").collection("book");
     const borrowCollection = client.db("libraryPulse").collection("borrow");
+
+
+       // auth api
+       app.post('/jwt', logger, async(req, res)=>{
+        const user = req.body;
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+        console.log(user);
+        res.cookie('token', token, {
+          httpOnly: false,
+          secure: false,
+          sameSite: 'none'
+        })
+        .send({success: true});
+      })
+  
+      app.post('/logout', async(req, res)=>{
+        const user = req.body;
+        console.log('logging out', user);
+        res.clearCookie('token', {maxAge: 0}).send({success: true})
+      })
+
+    // server api
 
     app.get("/book", async (req, res) => {
       const cursor = bookCollection.find();
